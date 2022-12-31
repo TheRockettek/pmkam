@@ -3,7 +3,7 @@ use std::{sync::mpsc::Sender, time::Instant};
 use ocl::{Buffer, Kernel, MemFlags, ProQue, SpatialDims, core::{DeviceInfo, DeviceInfoResult}};
 use anyhow::anyhow;
 
-const THREAD_ITER: usize = 4096;
+const THREAD_ITER: u32 = 4096;
 const DESIRED_ITER_TIME: f64 = 1_f64;
 const KERNEL_SRC: &str = include_str!("kernel.cl");
 
@@ -83,6 +83,7 @@ impl Miner {
             .global_work_size(local_size as usize)
             .arg_named("entropy", &entropy_buffer)
             .arg_named("trie", &trie_buffer)
+            .arg_named("threaditer", THREAD_ITER)
             .arg_named("nonce", 0u64)
             .arg_named("solved", &solved_buffer)
             .arg_named("pkey", &pkey_buffer)

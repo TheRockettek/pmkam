@@ -54,7 +54,7 @@ __constant uint K2[64] = {
 };
 
 // perform a single round of sha256 transformation on the given data
-inline void sha256_transform(UINT m[64], UINT H[8]) {
+inline void sha256_transform(__generic UINT m[64], __generic UINT H[8]) {
     #pragma unroll
     for (int i = 16; i < 64; i++) {
         m[i].i = SIG1(m[i - 2].i)
@@ -98,7 +98,7 @@ inline void sha256_transform(UINT m[64], UINT H[8]) {
 
 // perform a single round of sha256 transformation on the second block of a
 // 64-byte message
-inline void sha256_transform2(UINT H[8]) {
+inline void sha256_transform2(__generic UINT H[8]) {
     uint a = H[0].i;
     uint b = H[1].i;
     uint c = H[2].i;
@@ -135,7 +135,7 @@ inline void sha256_transform2(UINT H[8]) {
 // sha256 digest of exactly 64 bytes of input
 // UINT data[64] - input bytes - will be modified
 // UINT hash[8] - output bytes - will be modified
-inline void digest64(UINT data[64], UINT hash[8]) {
+inline void digest64(UINT data[64], __generic UINT hash[8]) {
     hash[0].i = 0x6a09e667;
     hash[1].i = 0xbb67ae85;
     hash[2].i = 0x3c6ef372;
@@ -151,11 +151,10 @@ inline void digest64(UINT data[64], UINT hash[8]) {
 
 // Address miner
 
-#define THREAD_ITER 4096 // How many addresses each work unit checks
 #define CHAIN_SIZE 32
 
 // Converts a sha256 hash to hexadecimal
-inline void hash_to_hex(const UINT hash[8], UINT hex[64]) {    
+inline void hash_to_hex(const __generic UINT hash[8], UINT hex[64]) {    
     #pragma unroll
     for (int i = 0; i < 16; i += 2) {
         uchar h, h1, h2;
@@ -328,6 +327,7 @@ inline bool check_address(const HASH_CHAIN_T *chain,__global const uint *trie) {
 __kernel void mine(
     __constant const uchar *entropy,      // 16 bytes
     __global const uint *trie,            // Variable size
+    const uint threaditer,                // Variable size
     const ulong nonce,
     __global uchar *solved,               // 1 byte
     __global uchar *pkey                  // 32 bytes
@@ -368,7 +368,7 @@ __kernel void mine(
     // Mine
     bool solution_found = false;
     uint solution_found_at;
-    for (int i = 0; i < THREAD_ITER; i++) {
+    for (uint i = 0; i < threaditer; i++) {
         if (check_address(&chain, trie)) {
             solution_found = true;
             solution_found_at = i;
